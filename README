@@ -1,0 +1,147 @@
+Nume: Talina Laura-Florina
+Grupa: 324CB
+
+Tema3
+
+Pentru rularea temei:
+1. make
+2. ./client
+3. Informatiile necesare procesarii comenzilor vor fi
+disponibile la rulare.
+Se cere introducerea unei comenzi valide, sub forma celor
+din enuntul temei, iar in cazul in care se introduce o comanda
+invalida, se solicita o alta comanda.
+
+In client.cpp, in functia main se citeste tipul comenzii urmand apoi sa se
+citeasca argumentele necesare fiecareia. Sunt apelate urmatoarele functii:
+
+int analyzes_response(char *response)
+	Verifica daca eroarea s-a realizat cu succes sau a avut loc o eroare.
+	Afiseaza "SUCCES" sau "EROARE", iar in caz de eroare se va
+	afisa si eroare intoarsa de server.
+	Se vor afisa codul intors de server, alaturi de mesajul aferent.
+
+void perform_register()
+	Functie care indeplineste comanda "register"
+	Ofera prompt pentru username si parola, pe care le converteste la un
+	obiect json. Se apeleaza functia "compute_post_register_login".
+
+string perform_login()
+	Functie care indeplineste comanda "login"
+	Ofera prompt pentru username si parola, pe care le converteste la un
+	obiect json. Se apeleaza functia "compute_post_register_login".
+	In cazul in care se realizeaza cu succes comanda, se 
+	extrage cookie-ul care ne va ajuta sa demonstram ca suntem
+	autentificati.
+
+string perform_entry_library(string cookie)
+	Functie care indeplineste comanda "enter_library"
+	Apeleaza "compute_get_enter_library", iar in caz de succes
+	se extrage token-ul, care ne ajuta sa demonstram ca
+	avem acces la biblioteca, si care va fi folosit in urmatoarele
+	comenzi "get_books", "get_book", "add_book", "delete_book".
+
+void perform_get_books(string token)
+	Indeplineste comanda "get_books"
+	Apeleaza "compute_get_get_books", iar in caz de succes
+	va afisa cartile disponibile in biblioteca.
+
+void perform_get_book(string token)
+	Indeplineste comanda "get_book"
+	Apeleaza "compute_get_get_books", iar in caz de succes
+	va afisa informatii despre cartea interogata.
+
+Functiile "perform_get_books" si "perform_get_book" utilizeaza
+aceeasi functie pentru get "compute_get_get_books", care primeste
+doar url-ul. Din acest motiv, in "perform_get_books" este concatenat
+parametrul "id" direct la url, si pasat mai departe functiei care
+face get.
+
+Se utilizeaza de asemenea "extract_books" care extrage detaliile
+despre o carte sau despre o colectie de carti.
+ 
+void perform_add_book(string token)
+	Indeplineste comanda "add_book"
+	Se ofera prompt pentru campurile necesare unei carti care sunt citite
+	de la tastatura prin intermediul functiei "getline", astfel incat
+	sa poata fi adaugate titluri de carte formate din mai multe cuvinte.
+	Apeleaza "compute_post_add_book".
+	
+void perform_delete_book(string token)
+	Realizeaza comanda "delete_book" pe baza unui id citit de la tastatura
+	Se apeleaza functia "compute_delete_book"
+
+void perform_logout(string cookie)
+	Realizeaza comanda "logout"
+	Se apeleaza "compute_get_logout".
+
+
+requests.cpp
+In acest fisier se gasesc functiile propriu zise care realizeaza interactiunea
+cu serverul prin comenzi de POST, GET, DELETE. Acestea sunt personalizate
+pentru fiecare tip de comanda pe care utilizatorul o poate introduuce
+de la tastatura, adaugandu-se exact headerele sau cookie-ul necesar,
+care sunt extrase din raspunsul primit de la server.
+
+char* compute_post_register_login(char *host, char *url, char* content_type, char *body_data)
+	Construieste un mesaj avand numele metodei, "POST", tipul
+	protocolului, url-ul, host-ul, alaturi de tipul contentului
+	si lungimea sa. Informatia din payload se trimite prin
+	parametrul "body_data".
+
+char *compute_get_enter_library(char *host, char *url, char *cookie)
+	Construieste un mesaj de GET, avand numele metodei, tipul protocolului
+	folosit, url-ul, host-ul, alaturi de un cookie care este trimis
+	prin parametrul "cookie".
+
+char *compute_get_get_books(char *host, char *url, 
+                             char *header_content)
+    Construieste un mesaj de GET, avand numele metodei, tipul
+    protocolului folosit, url-ul, host-ul, alaturi de token-ul
+    din headerul "Authorization", care este trasmis prin intermediul
+    parametrului "header_content".
+
+char *compute_post_add_book(char *host, char *url, char* content_type, char *body_data, char *header_content)
+	Construieste un mesaj de post cu scopul adaugarii unei carti in
+	biblioteca. Acesta va contine numele metodei, tipul protocolului,
+	host-ul, content-type-ul impreuna cu lungimea sa, si token-ul
+	jwt care este adaugat in headerul "Authorization".
+
+	Token-ul jwt se transmite prin parametrul "header_content"
+	Tipul continutului prin parametrul "content_type"
+	Payload-ul se transmite prin "body_data"
+
+char *compute_delete_book(char *host, char *url, char *query_params,
+                            char *header_content)
+    Aceasta comanda ajuta la stergerea unei carti. Se returneaza
+    un mesaj pentru DELETE, in care importanta este adaugarea
+    token-ului jwt in headerul "Authorization", pentru
+    a demonstra accesul la biblioteca.
+
+char *compute_get_logout(char *host, char *url, 
+                             char *cookie)
+    Aceasta comanda face un mesaj corespunzator unei comenzi de
+    GET, pentru logout. Esentiala este adaugarea cookie-ului
+    care sa demonstreze ca eram autentificati.
+
+In helpers.cpp am definit doua metode ajutatoare:
+char* extract_error_message(char *str)
+	Ajuta la extragerea mesajelor de eroare
+
+char *extract_books(char *str)
+	Ajuta la extragerea cartilor
+
+
+Tema a fost realizata in cpp, si am utilizat biblioteca "nlohmann"
+pentru parsarea JSON, deoarece este foarte usor de folosit.
+Pentru crearea obiectelor json am folosit urmatoarea modalitate:
+1. Am declarat un obiect json j;
+2. Am citit de la tastatura o valoare.
+3. j["username"] = username; Aceasta este modalitatea de a adauga
+valoarea, spre exemplu pentru username.
+
+Trebuie adaugat "using json = nlohmann::json;", asa cum este
+specificat in documentatia bibliotecii.
+
+* Functiile din "requests.cpp" au fost construite pe scheletul
+oferit in laborator.
